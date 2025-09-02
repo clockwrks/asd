@@ -1,17 +1,14 @@
 {
-  "name": "Imposter",
+  "name": "NameChanger",
   "version": "1.0.0",
-  "description": "Imposter",
+  "description": "Changes your display name to a target user's display name.",
   "authors": [
     {
-      "name": "clockwrks",
-      "id": "378986339007201290"
+      "name": "clockwrks"
     }
   ],
-  "main": "dist/Imposter.js",
+  "main": "index.tsx",
   "default": {
-    "active": false,
-    "subjectUserId": "",
     "targetUserId": ""
   }
 }

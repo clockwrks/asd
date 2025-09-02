@@ -1,42 +1,55 @@
-import { React, components } from "enmity/metro/common/react";
-import { settings } from "enmity/api";
+import React, { useState, useEffect } from 'react';
+import {
+  FormSwitch,
+  FormInput,
+  FormSection,
+  FormDivider,
+  FormText,
+} from 'enmity/components';
 
-const { TextInput, FormRow } = components;
+// Define the props for our settings component
+interface SettingsProps {
+  initialSettings: { active: boolean; targetUserId: string; };
+  onSave: (newSettings: any) => void;
+}
 
-export default () => {
-  const [subjectUserId, setSubjectUserId] = React.useState<string>(
-    settings.get("imposter", "subjectUserId", "") as string
-  );
-  const [targetUserId, setTargetUserId] = React.useState<string>(
-    settings.get("imposter", "targetUserId", "") as string
-  );
+// This component handles the rendering and state of the settings panel
+export default function PluginSettings({ initialSettings, onSave }: SettingsProps): JSX.Element {
+  const [localSettings, setLocalSettings] = useState(initialSettings);
 
-  const saveSubjectId = (value: string) => {
-    setSubjectUserId(value);
-    settings.set("imposter", "subjectUserId", value);
-  };
+  // Update local state when initial settings change from the parent component
+  useEffect(() => {
+    setLocalSettings(initialSettings);
+  }, [initialSettings]);
 
-  const saveTargetId = (value: string) => {
-    setTargetId(value);
-    settings.set("imposter", "targetUserId", value);
+  // Handler for saving settings and applying them
+  const handleSave = (newSettings: any) => {
+    setLocalSettings(newSettings);
+    onSave(newSettings);
   };
 
   return (
-    <React.Fragment>
-      <FormRow label="Subject User ID (To Copy)">
-        <TextInput
-          placeholder="e.g., 235148962103953408"
-          value={subjectUserId}
-          onChangeText={saveSubjectId}
-        />
-      </FormRow>
-      <FormRow label="Target User ID (To Spook)">
-        <TextInput
-          placeholder="e.g., 235148962103953408"
-          value={targetUserId}
-          onChangeText={saveTargetId}
-        />
-      </FormRow>
-    </React.Fragment>
+    <FormSection title="NameChanger Settings">
+      <FormSwitch
+        note="Enable or disable the plugin."
+        value={localSettings.active}
+        onChange={(val) => handleSave({ ...localSettings, active: val })}
+      >
+        Enabled
+      </FormSwitch>
+      <FormDivider />
+      <FormInput
+        placeholder="Enter a user ID"
+        label="Target User ID"
+        note="Your display name will change to this user's display name."
+        value={localSettings.targetUserId}
+        onChange={(val) => setLocalSettings({ ...localSettings, targetUserId: val })}
+        onBlur={() => handleSave(localSettings)}
+      />
+      <FormDivider />
+      <FormText>
+        After setting the User ID, toggle the "Enabled" switch to apply the changes. You may need to restart Discord for some changes to take effect.
+      </FormText>
+    </FormSection>
   );
-};
+}
