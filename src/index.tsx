@@ -1,12 +1,6 @@
 import { Plugin, patcher, webpack } from 'enmity';
 import { storage } from 'enmity/api/storage';
-import {
-  FormSwitch,
-  FormInput,
-  FormSection,
-  FormDivider,
-  FormText,
-} from 'enmity/components';
+import PluginSettings from 'components/settings';
 import React from 'react';
 
 // Define the shape of our plugin settings
@@ -28,8 +22,10 @@ export default class NameChanger extends Plugin {
   public settings: Settings = defaultSettings;
 
   public async onStart(): Promise<void> {
+    console.log('NameChanger: Plugin starting...');
     // Load the stored settings
     this.settings = (await storage.get(this.manifest.name, 'settings')) || defaultSettings;
+    console.log('NameChanger: Loaded settings:', this.settings);
 
     if (this.settings.active && this.settings.targetUserId) {
       this.applyPatch();
@@ -37,69 +33,52 @@ export default class NameChanger extends Plugin {
   }
 
   public onStop(): void {
+    console.log('NameChanger: Plugin stopping, unpatching all...');
     // Unpatch all hooks when the plugin is stopped
     patcher.unpatchAll();
   }
 
   private applyPatch(): void {
     const currentUserId = UserStore.getCurrentUser().id;
+    console.log('NameChanger: Applying patch for user ID:', currentUserId);
 
     // Patch the getMember method in the GuildMemberStore
-    patcher.after(GuildMemberStore, 'getMember', (that, args, res) => {
-      // Check if the member being fetched is the current user
-      if (res && args && args[1] === currentUserId) {
-        const targetMember = GuildMemberStore.getMember(args[0], this.settings.targetUserId);
-        
-        // If the target member exists, change the current user's nickname
-        if (targetMember) {
-          Object.assign(res, {
-            nick: targetMember.nick,
-          });
+    // This is the most reliable way to override the displayed nickname
+    try {
+      patcher.after(GuildMemberStore, 'getMember', (that, args, res) => {
+        // Check if the member being fetched is the current user
+        if (res && args && args[1] === currentUserId) {
+          const targetMember = GuildMemberStore.getMember(args[0], this.settings.targetUserId);
+          
+          // If the target member exists, change the current user's nickname
+          if (targetMember) {
+            console.log(`NameChanger: Patching nickname from "${res.nick}" to "${targetMember.nick}"`);
+            Object.assign(res, {
+              nick: targetMember.nick,
+            });
+          }
         }
-      }
-    });
+      });
+      console.log('NameChanger: Patch applied successfully.');
+    } catch (e) {
+      console.error('NameChanger: Failed to apply patch.', e);
+    }
+  }
+
+  // Method to save and apply settings from the UI
+  public async saveAndApplySettings(newSettings: Settings): Promise<void> {
+    this.settings = newSettings;
+    await storage.set(this.manifest.name, 'settings', newSettings);
+
+    // Unpatch existing hooks before applying new ones
+    patcher.unpatchAll();
+    if (newSettings.active && newSettings.targetUserId) {
+      this.applyPatch();
+    }
   }
 
   public getSettingsPanel(): JSX.Element {
-    const [localSettings, setLocalSettings] = React.useState<Settings>(this.settings);
-
-    // Function to save and apply settings
-    const saveAndApplySettings = async (newSettings: Settings) => {
-      this.settings = newSettings;
-      await storage.set(this.manifest.name, 'settings', newSettings);
-
-      // Unpatch existing hooks before applying new ones
-      patcher.unpatchAll();
-      if (newSettings.active && newSettings.targetUserId) {
-        this.applyPatch();
-      }
-      
-      setLocalSettings(newSettings);
-    };
-
-    return (
-      <FormSection title="NameChanger Settings">
-        <FormSwitch
-          note="Enable or disable the plugin."
-          value={localSettings.active}
-          onChange={(val) => saveAndApplySettings({ ...localSettings, active: val })}
-        >
-          Enabled
-        </FormSwitch>
-        <FormDivider />
-        <FormInput
-          placeholder="Enter a user ID"
-          label="Target User ID"
-          note="Your display name will change to this user's display name."
-          value={localSettings.targetUserId}
-          onChange={(val) => setLocalSettings({ ...localSettings, targetUserId: val })}
-          onBlur={() => saveAndApplySettings(localSettings)}
-        />
-        <FormDivider />
-        <FormText>
-          After setting the User ID, toggle the "Enabled" switch to apply the changes. You may need to restart Discord for some changes to take effect.
-        </FormText>
-      </FormSection>
-    );
+    // Pass the current settings and the save handler to the new component
+    return <PluginSettings initialSettings={this.settings} onSave={this.saveAndApplySettings.bind(this)} />;
   }
 }
