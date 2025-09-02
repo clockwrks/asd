@@ -1,11 +1,17 @@
 {
-   "name": "Imposter",
-   "version": "1.0.0",
-   "description": "Imposter",
-   "authors": [
-      {
-         "name": "clockwrks",
-         "id": "378986339007201290"
-      }
-   ]
+  "name": "Imposter",
+  "version": "1.0.0",
+  "description": "Imposter",
+  "authors": [
+    {
+      "name": "clockwrks",
+      "id": "378986339007201290"
+    }
+  ],
+  "main": "dist/Imposter.js",
+  "default": {
+    "active": false,
+    "subjectUserId": "",
+    "targetUserId": ""
+  }
 }
