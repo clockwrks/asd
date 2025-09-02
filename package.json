@@ -1,16 +1,16 @@
 {
-  "name": "simpleplugin",
-  "author": "yourname",
-  "version": "0.0.1",
-  "main": "dist/SimplePlugin.js",
+  "name": "example-plugin",
+  "version": "1.0.0",
+  "main": "dist/index.js",
   "scripts": {
-  "build": "esbuild src/index.ts --bundle --platform=neutral --format=cjs --outfile=dist/SimplePlugin.js --external:enmity/*"
-}
-,
-  "dependencies": {
-    "enmity": "*"
+    "build": "esbuild src/index.tsx --bundle --platform=neutral --format=cjs --outfile=dist/index.js --external:react-native --external:moment"
   },
   "devDependencies": {
-    "esbuild": "^0.25.9"
+    "esbuild": "^0.17.0",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "moment": "^2.29.4",
+    "react-native": "^0.77.3"
   }
 }

@@ -1,0 +1,14 @@
+{
+	"name": "Example Plugin",
+	"description": "This is an example addon.",
+	"version": "1.0.0",
+	"id": "eternal.example",
+	"icon": "debug",
+	"authors": [
+		{
+			"name": "clockwrks",
+			"id": "378986339007201290"
+		}
+	],
+	"main": "index.tsx"
+}
